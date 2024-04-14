@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { BoardsService } from './boards.service';
 import { Board, BoardStatus } from './board.model';
 import { createBoardDto } from './dto/create-board.dto';
+import { BoardStatusValidationPipe } from './pipes/board-status-validation.pipe';
 
 @Controller('boards')
 export class BoardsController {
@@ -26,6 +27,7 @@ export class BoardsController {
     // }
 
     @Post()
+    @UsePipes(ValidationPipe) //유효성 체크
     createBoard(
         @Body() createBoardDto: createBoardDto
     ): Board { //return 값의 타입은 Board, Board[]로 주면 안됨 : service의 createBoard의 return 값이 board 하나이기 때문에
@@ -45,9 +47,9 @@ export class BoardsController {
     @Patch('/:id/status')
     updateBoardStatus(
         @Param('id') id: string,
-        @Body('status') status: BoardStatus
-    ) {
+        @Body('status', BoardStatusValidationPipe) status: BoardStatus,
+    ): Board {
         return this.boardsService.updateBoardStatus(id, status);
     }
-
+    
 }
