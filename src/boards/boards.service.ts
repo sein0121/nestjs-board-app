@@ -2,9 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BoardStatus } from './board-status.enum';
 import { v1 as uuid } from 'uuid';
 import { createBoardDto } from './dto/create-board.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+// import { BoardRepository } from './board.repository';
+import { Board } from './board.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BoardsService {
+    constructor(
+        @InjectRepository(Board)
+        private boardRepository: Repository<Board>,
+        //private 을 사용하면 암묵적으로 boardRepository 인자가 프로퍼티로 선언이 된다.
+    ){}
     // private boards: Board[] = [];
 
     // getAllBoards(): Board[] {
@@ -48,4 +57,25 @@ export class BoardsService {
     //     board.status = status;
     //     return board;
     // }
+
+
+    async getBoardById(id: number): Promise <Board>{
+        const found = await this.boardRepository.findOne({ where: { id } });
+
+        if(!found){
+            throw new NotFoundException(`Can't find Voard with id ${id}`)
+        }
+        return found;
+    }
+
+    async createBoard(createBoardDto: createBoardDto): Promise<Board>{
+        const {title, description} = createBoardDto;
+        const board = this.boardRepository.create({
+            title,
+            description,
+            status: BoardStatus.PUBLIC 
+        })
+        await this.boardRepository.save(board);
+        return board;
+    }
 }
